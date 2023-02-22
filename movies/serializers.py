@@ -26,8 +26,6 @@ class MovieSerializer(serializers.Serializer):
         return req.user.email
 
     def create(self, validated_data):
-        # print(validated_data,)
-        # ipdb.set_trace()
         return Movie.objects.create(**validated_data, )
         added_by_obj = validated_data.user.email
         movie = Movie.objects.create(**validated_data, added_by=added_by_obj)

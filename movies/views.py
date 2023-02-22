@@ -25,7 +25,6 @@ class MovieView(APIView):
     def post(self, req: Request) -> Response:
         serializer = MovieSerializer(data=req.data)
         serializer.is_valid(raise_exception=True)
-        # ipdb.set_trace()
         serializer.save(user=req.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -45,6 +44,4 @@ class MovieDetailView(APIView):
     def get(self, req: Request, movie_id: int):
         movie_exists = get_object_or_404(Movie, id=movie_id)
         serializer = MovieSerializer(movie_exists)
-        # ipdb.set_trace()
-        # data = serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status.HTTP_200_OK)
