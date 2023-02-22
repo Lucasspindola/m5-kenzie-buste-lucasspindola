@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView, Request, Response, status
-from .serializers import MovieSerializer
+from .serializers import MovieSerializer, MovieOrderSerializer
 from .models import Movie
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import (
@@ -8,7 +8,7 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated,
 )
-from users.permissions import IsAdminOrReadOnly
+from users.permissions import IsAdminOrReadOnly, isAnAuthorizedUser
 from django.shortcuts import get_object_or_404
 import ipdb
 
@@ -45,3 +45,22 @@ class MovieDetailView(APIView):
         movie_exists = get_object_or_404(Movie, id=movie_id)
         serializer = MovieSerializer(movie_exists)
         return Response(serializer.data, status.HTTP_200_OK)
+
+
+class MovieOrderView(APIView):
+    # Apenas autenticado
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [isAnAuthorizedUser]
+
+    def post(self, req: Request, movie_id: int) -> Response:
+        movie = get_object_or_404(Movie, id=movie_id)
+        user_order = req.user
+        serializer = MovieOrderSerializer(data=req.data)
+        # serializer.is_valid(raise_exception=True)
+        if serializer.is_valid():
+            serializer.save(user=user_order, movie=movie)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=400)
+
+
