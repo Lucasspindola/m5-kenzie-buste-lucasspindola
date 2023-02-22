@@ -29,6 +29,9 @@ class UserSerializer(serializers.Serializer):
         return User.objects.create_user(**validated_data)
 
 
+# class SessionSerializer(serializers.Serializer):
+#     username = serializers.CharField(max_length=20, write_only=True)
+#     password = serializers.CharField(write_only=True)
 # Não vai vir na req, mas se vier empregado, tornar isuper true e retornar duas chaves boleaan
 # is_superuser = serializers.BooleanField(allow_null=True, default=False)
 # # de qualquer forma deve retornar as chaves
