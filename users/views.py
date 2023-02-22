@@ -2,6 +2,9 @@ from django.shortcuts import render
 from rest_framework.views import APIView, Request, Response, status
 from .models import User
 from .serializers import UserSerializer
+from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .permissions import IsEmployeeOrLoggedUser
 
 
 class UserView(APIView):
@@ -18,36 +21,21 @@ class UserView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# from django.contrib.auth import authenticate
-# from rest_framework_simplejwt.tokens import RefreshToken
-# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-# from rest_framework_simplejwt.views import TokenObtainPairView
-# Session(login)
-# Forma um
-# class UserSessionView(APIView):
-#     def post(self, req: Request) -> Response:
-#         serializer = SessionSerializer(data=req.data)
-#         serializer.is_valid(raise_exception=True)
-#         user = authenticate(
-#             username=serializer.validated_data["username"],
-#             password=serializer.validated_data["password"],
-#         )
-#         # ||   user = authenticate(**serializer.validated_data)
-#         if not user:
-#             return Response({"details": "invalid credencials"}, status=status.HTTP_404_NOT_FOUND)
-#         refresh = RefreshToken.for_user(user)
-#         return_dict = {
-#             "refresh": str(refresh),
-#             "access": str(refresh.access_token),
-#         }
-#         return Response(return_dict, status.HTTP_200_OK)
-# Forma dois
-# class UserSessionView(APIView):
-# def post(self, req: Request) -> Response:
-#     serializer = TokenObtainPairSerializer(data=req.data)
-#     serializer.is_valid(raise_exception=True)
-#     return Response(serializer.validated_data, status.HTTP_200_OK)
+class UserDetailView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsEmployeeOrLoggedUser]
 
-# Melhor forma, mas foi chamado diretamente na urls.py
-# class UserSessionView(TokenObtainPairView):
-#     ...
+    def get(self, req: Request, user_id: int) -> Response:
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(user)
+
+        return Response(serializer.data)
+
+    def patch(self, req: Request, user_id: int) -> Response:
+        user = get_object_or_404(User, id=user_id)
+        serializer = UserSerializer(user, req.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        return Response(serializer.data, status.HTTP_200_OK)
